@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MU Options Strategies - January 24, 2026</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px 0;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .header p {
+            color: #8892b0;
+            font-size: 1.1rem;
+        }
+        
+        .stats-row {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 40px;
+        }
+        
+        .stat-box {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px 30px;
+            border-radius: 12px;
+            text-align: center;
+            min-width: 150px;
+        }
+        
+        .stat-box small {
+            color: #8892b0;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+        }
+        
+        .stat-box .value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-top: 5px;
+        }
+        
+        .bullish { color: #27ae60; }
+        .bearish { color: #e74c3c; }
+        
+        .strategies {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 25px;
+            margin-bottom: 50px;
+        }
+        
+        .strategy-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 25px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .strategy-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .high-risk {
+            border-left: 4px solid #e74c3c;
+        }
+        
+        .medium-risk {
+            border-left: 4px solid #f39c12;
+        }
+        
+        .low-risk {
+            border-left: 4px solid #27ae60;
+        }
+        
+        .strategy-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .strategy-header h3 {
+            font-size: 1.3rem;
+        }
+        
+        .risk-badge {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .risk-badge.high { background: rgba(231, 76, 60, 0.2); color: #e74c3c; }
+        .risk-badge.medium { background: rgba(243, 156, 18, 0.2); color: #f39c12; }
+        .risk-badge.low { background: rgba(39, 174, 96, 0.2); color: #27ae60; }
+        
+        .strategy-desc {
+            color: #8892b0;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+        }
+        
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .metric-row:last-child {
+            border-bottom: none;
+        }
+        
+        .metric-label {
+            color: #8892b0;
+        }
+        
+        .metric-value {
+            font-weight: 600;
+        }
+        
+        .metric-value.profit { color: #27ae60; }
+        .metric-value.loss { color: #e74c3c; }
+        
+        .win-rate {
+            font-size: 2rem;
+            font-weight: 700;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .exit-conditions {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .exit-conditions h4 {
+            font-size: 0.9rem;
+            color: #8892b0;
+            margin-bottom: 12px;
+        }
+        
+        .exit-conditions ul {
+            list-style: none;
+        }
+        
+        .exit-conditions li {
+            padding: 8px 0;
+            font-size: 0.9rem;
+        }
+        
+        .chart-section {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .chart-section h2 {
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+        }
+        
+        .probability-bars {
+            display: flex;
+            gap: 10px;
+            height: 200px;
+            align-items: flex-end;
+            justify-content: center;
+        }
+        
+        .prob-bar {
+            width: 60px;
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px 8px 0 0;
+            position: relative;
+            transition: height 0.5s ease;
+        }
+        
+        .prob-bar::after {
+            content: attr(data-label);
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.75rem;
+            color: #8892b0;
+            white-space: nowrap;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 30px 0;
+            color: #8892b0;
+            font-size: 0.85rem;
+        }
+        
+        @media (max-width: 768px) {
+            .strategies {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-row {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📈 MU Options Strategies</h1>
+            <p>Entry Date: January 24, 2026 | Capital: $10,000</p>
+        </div>
+        
+        <div class="stats-row">
+            <div class="stat-box">
+                <small>Current Price</small>
+                <div class="value">$96.07</div>
+            </div>
+            <div class="stat-box">
+                <small>Implied Volatility</small>
+                <div class="value">66-68%</div>
+            </div>
+            <div class="stat-box">
+                <small>Key Catalyst</small>
+                <div class="value" style="font-size: 1rem;">ASML Earnings Jan 28</div>
+            </div>
+            <div class="stat-box">
+                <small>Sector Sentiment</small>
+                <div class="value bullish">Bullish</div>
+            </div>
+        </div>
+        
+        <div class="strategies">
+            <!-- HIGH RISK -->
+            <div class="strategy-card high-risk">
+                <div class="strategy-header">
+                    <h3>🔴 Weekly Calls</h3>
+                    <span class="risk-badge high">High Risk</span>
+                </div>
+                <p class="strategy-desc">BUY MU Jan 31 $100 Call - Directional bet on continued momentum</p>
+                
+                <div class="metric-row">
+                    <span class="metric-label">Entry Price</span>
+                    <span class="metric-value">$2.35 × 10 contracts</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Total Cost</span>
+                    <span class="metric-value">$2,350</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Max Gain</span>
+                    <span class="metric-value profit">Unlimited</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Max Loss</span>
+                    <span class="metric-value loss">-$2,350</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Breakeven</span>
+                    <span class="metric-value">$102.35</span>
+                </div>
+                
+                <div class="win-rate">~30%<br><small style="font-size: 0.8rem; color: #8892b0;">Win Probability</small></div>
+                
+                <div class="exit-conditions">
+                    <h4>Exit Conditions</h4>
+                    <ul>
+                        <li>✅ Profit Target: Exit at 50-100% gain ($3.50-$4.70)</li>
+                        <li>🛑 Stop Loss: Exit if drops to $1.18 (-50%)</li>
+                        <li>⏰ Time Stop: Close by Jan 29 (avoid theta crush)</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- MEDIUM RISK -->
+            <div class="strategy-card medium-risk">
+                <div class="strategy-header">
+                    <h3>🟡 Bull Call Spread</h3>
+                    <span class="risk-badge medium">Medium Risk</span>
+                </div>
+                <p class="strategy-desc">BUY MU Feb 21 $95 Call / SELL $105 Call - Defined risk spread</p>
+                
+                <div class="metric-row">
+                    <span class="metric-label">Net Debit</span>
+                    <span class="metric-value">$4.80 × 10 spreads</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Total Cost</span>
+                    <span class="metric-value">$4,800</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Max Gain</span>
+                    <span class="metric-value profit">+$5,200</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Max Loss</span>
+                    <span class="metric-value loss">-$4,800</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Breakeven</span>
+                    <span class="metric-value">$99.80</span>
+                </div>
+                
+                <div class="win-rate">~45%<br><small style="font-size: 0.8rem; color: #8892b0;">Win Probability</small></div>
+                
+                <div class="exit-conditions">
+                    <h4>Exit Conditions</h4>
+                    <ul>
+                        <li>✅ Profit Target: Exit at 50-75% of max ($7.30-$8.40)</li>
+                        <li>🛑 Stop Loss: Exit if spread drops below $2.40</li>
+                        <li>⏰ Time Stop: Close by Feb 14 (14 DTE)</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- LOW RISK -->
+            <div class="strategy-card low-risk">
+                <div class="strategy-header">
+                    <h3>🟢 Put Credit Spread</h3>
+                    <span class="risk-badge low">Low Risk</span>
+                </div>
+                <p class="strategy-desc">SELL MU Feb 21 $90 Put / BUY $85 Put - Income strategy</p>
+                
+                <div class="metric-row">
+                    <span class="metric-label">Net Credit</span>
+                    <span class="metric-value">$1.45 × 10 spreads</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Collateral Required</span>
+                    <span class="metric-value">$3,550</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Max Gain</span>
+                    <span class="metric-value profit">+$1,450</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Max Loss</span>
+                    <span class="metric-value loss">-$3,550</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Breakeven</span>
+                    <span class="metric-value">$88.55</span>
+                </div>
+                
+                <div class="win-rate">~70%<br><small style="font-size: 0.8rem; color: #8892b0;">Win Probability</small></div>
+                
+                <div class="exit-conditions">
+                    <h4>Exit Conditions</h4>
+                    <ul>
+                        <li>✅ Profit Target: Close at 50% profit ($0.73 debit)</li>
+                        <li>🛑 Stop Loss: Close if spread reaches $2.90</li>
+                        <li>📅 Let expire if MU stays above $90</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="chart-section">
+            <h2>📊 Strategy Comparison</h2>
+            <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+                <thead>
+                    <tr style="border-bottom: 2px solid rgba(255,255,255,0.1);">
+                        <th style="padding: 15px; text-align: left;">Strategy</th>
+                        <th style="padding: 15px; text-align: center;">Risk</th>
+                        <th style="padding: 15px; text-align: right;">Max Profit</th>
+                        <th style="padding: 15px; text-align: right;">Max Loss</th>
+                        <th style="padding: 15px; text-align: center;">Win Prob</th>
+                        <th style="padding: 15px; text-align: left;">Best If...</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td style="padding: 15px;">Weekly Calls</td>
+                        <td style="padding: 15px; text-align: center;"><span class="risk-badge high">High</span></td>
+                        <td style="padding: 15px; text-align: right; color: #27ae60;">Unlimited</td>
+                        <td style="padding: 15px; text-align: right; color: #e74c3c;">-$2,350</td>
+                        <td style="padding: 15px; text-align: center;">~30%</td>
+                        <td style="padding: 15px;">Strong conviction, short-term catalyst</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td style="padding: 15px;">Bull Call Spread</td>
+                        <td style="padding: 15px; text-align: center;"><span class="risk-badge medium">Medium</span></td>
+                        <td style="padding: 15px; text-align: right; color: #27ae60;">+$5,200</td>
+                        <td style="padding: 15px; text-align: right; color: #e74c3c;">-$4,800</td>
+                        <td style="padding: 15px; text-align: center;">~45%</td>
+                        <td style="padding: 15px;">Moderately bullish, defined risk</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 15px;">Put Credit Spread</td>
+                        <td style="padding: 15px; text-align: center;"><span class="risk-badge low">Low</span></td>
+                        <td style="padding: 15px; text-align: right; color: #27ae60;">+$1,450</td>
+                        <td style="padding: 15px; text-align: right; color: #e74c3c;">-$3,550</td>
+                        <td style="padding: 15px; text-align: center;">~70%</td>
+                        <td style="padding: 15px;">Want income, stock won't crash</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="chart-section">
+            <h2>💡 Recommendation</h2>
+            <p style="font-size: 1.1rem; line-height: 1.8; color: #ccd6f6;">
+                Based on current market conditions and MU's setup, the <strong style="color: #f39c12;">Bull Call Spread (Medium Risk)</strong> 
+                offers the best risk/reward profile. MU has strong momentum from AI memory demand, upcoming ASML earnings could be a catalyst, 
+                and the defined-risk nature of the spread protects against unexpected downside. The 30 DTE timeframe gives room for the 
+                thesis to play out without excessive theta decay.
+            </p>
+            <p style="margin-top: 20px; color: #8892b0;">
+                <strong>Key reasoning from analysis:</strong> "Micron seems like the safest play... they are very solvent right now and 
+                even if the AI bubble pops, Micron is still going to be doing fine. They'll lose value, but they are not going to go bust."
+            </p>
+        </div>
+        
+        <div class="footer">
+            <p>Generated by AI-Assisted Stock Research Workflow</p>
+            <p style="margin-top: 10px;">⚠️ This is for educational purposes only. Options involve significant risk. Always do your own research.</p>
+        </div>
+    </div>
+</body>
+</html>
