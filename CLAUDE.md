@@ -5,46 +5,107 @@ This project replicates the Claude Cowork stock trading workflow for AI-assisted
 
 **Plan:** Claude Pro (Sonnet 4.5)
 **Focus Sectors:** Tech (semiconductors, AI), Mining (gold, silver, lithium, uranium), Financials (banks, fintech)
-**Data Sources:** Free APIs only (yfinance, Finnhub, SEC EDGAR, FRED)
+**Data Sources:** yfinance (primary), Alpha Vantage (screeners), Alpaca (real-time validation)
+
+---
+
+## Live API Endpoints
+
+**Base URL:** https://stockresearcher.vercel.app
+
+### Quick Data
+```bash
+# Get stock quote
+curl https://stockresearcher.vercel.app/api/quote/NVDA
+
+# Calculate volatility
+curl https://stockresearcher.vercel.app/api/volatility/NVDA
+```
+
+### Market Scanning
+```bash
+# Trigger market scan (uses Alpha Vantage TOP_GAINERS_LOSERS)
+curl -X POST https://stockresearcher.vercel.app/api/scan
+
+# Get scan results
+curl https://stockresearcher.vercel.app/api/scan/1
+
+# List recent scans
+curl https://stockresearcher.vercel.app/api/scans
+```
+
+### Deep Dive Analysis
+```bash
+# Analyze a ticker (solvency, volatility, risk assessment)
+curl -X POST https://stockresearcher.vercel.app/api/analyze \
+  -H "Content-Type: application/json" \
+  -d '{"symbol": "NVDA"}'
+```
+
+### Options Strategy Generation
+```bash
+# Generate 3 strategies (HIGH/MEDIUM/LOW risk)
+curl -X POST https://stockresearcher.vercel.app/api/strategy \
+  -H "Content-Type: application/json" \
+  -d '{"symbol": "NVDA", "capital": 500}'
+```
+
+### Trade Plans
+```bash
+# List all plans
+curl https://stockresearcher.vercel.app/api/plans
+
+# Filter by symbol or status
+curl "https://stockresearcher.vercel.app/api/plans?symbol=NVDA&status=PLANNED"
+
+# Update plan status
+curl -X PATCH "https://stockresearcher.vercel.app/api/plans/1/status?new_status=OPEN"
+```
 
 ---
 
 ## Workflow Steps (Execute in Order)
 
 ### Step 1: Weekly Market Scan
-**Command:** `/project:weekly-scan`
-- Identify top 25 movers in each target sector
-- Categorize as gainers, decliners, notable movers
-- Note dominant market themes and catalysts
+**API:** `POST /api/scan`
+- Fetches top gainers, losers, and most active from Alpha Vantage (1 API call)
+- Filters for stocks with >5% movement
+- Identifies dominant market theme
+- Persists to `marketscan` table
 
 ### Step 2: Deep Dive Analysis
-**Command:** `/project:analyze-stock TICKER`
-- Analyst ratings (buy/sell/hold consensus)
-- Sentiment analysis from recent news
-- Volatility risk assessment (Extreme/High/Medium/Low)
-- Direction bias (Bullish/Bearish/Either-way)
-- Key catalysts (earnings, product launches, macro events)
+**API:** `POST /api/analyze`
+- Checks solvency (Operating Cash Flow > 0)
+- Calculates 20-day annualized volatility
+- Assesses risk level (LOW/MEDIUM/HIGH/EXTREME)
+- Determines direction bias (BULLISH/BEARISH/NEUTRAL)
+- Flags "safe plays" vs speculative
 
 ### Step 3: Stock Selection
-**Command:** `/project:pick-stocks`
-- From top gainers, identify 3 most likely to move next week
-- Assign volatility risk and direction bias
-- Recommend "safe plays" (solvent companies that won't go bust)
-- Flag high-risk speculative plays
+From deep dive results, identify:
+- 3 most likely to move next week
+- Volatility risk and direction bias
+- "Safe plays" (solvent + LOW/MEDIUM risk)
+- High-risk speculative plays
 
 ### Step 4: Options Strategy Generation
-**Command:** `/project:options-strategy TICKER CAPITAL`
-- Generate 3 strategies: HIGH, MEDIUM, LOW risk
-- Include entry price, strike, expiration, contracts
-- Calculate max profit, max loss, breakeven
-- Set exit conditions (profit target, stop-loss, time stop)
-- Estimate win probability
+**API:** `POST /api/strategy`
+- **HIGH RISK:** Long Call (Delta 0.30-0.40, ~7 DTE)
+- **MEDIUM RISK:** Bull Call Spread (ATM/OTM, ~30 DTE)
+- **LOW RISK:** Put Credit Spread (income strategy, ~30 DTE)
 
-### Step 5: Output Generation
-**Command:** `/project:generate-report`
-- Create options dashboard (HTML/React)
-- Generate stock picks PDF
-- Save all analysis to dated files
+Each strategy includes:
+- Entry price, strike, expiration, contracts
+- Greeks (delta, gamma, theta, vega)
+- Max profit, max loss, breakeven
+- Win probability estimate
+- Exit conditions (profit target, stop-loss, time stop)
+
+### Step 5: Review & Execute
+**API:** `GET /api/plans` + `PATCH /api/plans/{id}/status`
+- Review generated strategies
+- Update status: PLANNED → OPEN → CLOSED
+- Track realized P&L
 
 ---
 
@@ -70,6 +131,33 @@ This project replicates the Claude Cowork stock trading workflow for AI-assisted
 
 ---
 
+## Volatility Categories
+
+| Category | Annualized Vol | Recommended Strategies |
+|----------|---------------|------------------------|
+| LOW | < 20% | Cash-secured puts, Put credit spreads, Covered calls |
+| MEDIUM | 20-35% | Bull call spreads, Put credit spreads, Iron condors |
+| HIGH | 35-50% | Long calls/puts, Vertical spreads, Straddles |
+| EXTREME | > 50% | Small positions only, Wide spreads, Consider waiting |
+
+---
+
+## Risk Management Rules
+
+| Risk Tier | Stop-Loss | Profit Target | Time Stop |
+|-----------|-----------|---------------|-----------|
+| HIGH | 50% | 50% | 1 day before expiry |
+| MEDIUM | 40% | 50% | 5 days before expiry |
+| LOW | 100% of credit | 50% | 5 days before expiry |
+
+**Golden Rules:**
+- Never risk more than you can afford to lose
+- Verify all data before executing trades
+- Options pricing from APIs is approximate
+- Always check market hours and holidays
+
+---
+
 ## File Naming Conventions
 - Daily scans: `analysis/daily/market_scan_YYYY-MM-DD.md`
 - Stock analysis: `analysis/stocks/TICKER_analysis_YYYY-MM-DD.md`
@@ -79,63 +167,114 @@ This project replicates the Claude Cowork stock trading workflow for AI-assisted
 
 ---
 
-## Data Fetching Commands
+## Local Development
 
-### Using yfinance (Python)
-```python
-import yfinance as yf
+```bash
+# Start local server
+uvicorn api.index:app --reload
 
-# Get stock data
-ticker = yf.Ticker("MU")
-hist = ticker.history(period="1mo")
-info = ticker.info
-options = ticker.option_chain(ticker.options[0])
-recommendations = ticker.recommendations
+# Test endpoints
+curl http://localhost:8000/api/health
+curl http://localhost:8000/api/quote/NVDA
+curl -X POST http://localhost:8000/api/scan
+
+# Deploy to Vercel
+vercel --prod
 ```
-
-### Key Metrics to Extract
-- Current price, 52-week range
-- P/E ratio, forward P/E
-- Revenue growth, earnings growth
-- Analyst recommendations (Strong Buy/Buy/Hold/Sell/Strong Sell)
-- Options: IV, delta, theta, open interest
-- Sector ETF correlation
 
 ---
 
-## Important Reminders
+## MCP Tools (Claude Autonomous Execution)
 
-### Market Calendar Awareness
-- Check for market holidays (MLK Day, Presidents Day, etc.)
-- Earnings dates affect options pricing significantly
-- Fed meeting dates impact financial sector
+**MCP Server:** `https://stockresearcher.vercel.app/mcp/`
 
-### Risk Management Rules
-- HIGH RISK: Max 50% of position as stop-loss
-- MEDIUM RISK: Max 40-50% loss tolerance
-- LOW RISK: Income strategies, 20-30% max loss
-- Never risk more than you can afford to lose
+### Setup
+```bash
+# Add remote MCP server to Claude Code
+claude mcp add stock-researcher --transport http https://stockresearcher.vercel.app/mcp/
+```
 
-### AI Limitations to Watch For
-- Date/calendar math errors (verify manually)
-- Real-time quotes may be delayed or estimated
-- Always verify critical data before trading
-- Options pricing from web research is approximate
+### Available Tools (9 total)
+
+| Tool | Parameters | Description |
+|------|------------|-------------|
+| `market_scan` | `min_change_pct=5.0, max_results=20` | Scan for top movers |
+| `get_scan` | `scan_id: int` | Retrieve scan by ID |
+| `list_scans` | `limit=10` | List recent scans |
+| `deep_dive` | `symbol: str, scan_id?: int` | Full analysis |
+| `get_quote` | `symbol: str` | Current price/metrics |
+| `calculate_volatility` | `symbol: str, days=20` | Volatility assessment |
+| `generate_strategies` | `symbol: str, capital: float` | Create 3 strategies |
+| `list_plans` | `symbol?: str, status?: str` | List trade plans |
+| `update_plan_status` | `plan_id: int, new_status: str` | Update status |
+
+### Test MCP Server
+```bash
+# Initialize connection
+curl -X POST https://stockresearcher.vercel.app/mcp/ \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}'
+
+# List tools
+curl -X POST https://stockresearcher.vercel.app/mcp/ \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}'
+```
+
+### Autonomous Workflow Example
+```
+User: "Run the full research workflow with $500 capital"
+
+Claude will:
+1. market_scan() → Find top movers
+2. deep_dive(top_gainer) → Analyze best candidates
+3. generate_strategies(symbol, 500) → Create options plans
+4. list_plans() → Show generated strategies
+```
+
+---
+
+## Database Schema
+
+### marketscan
+- `id`, `date`, `scan_type`, `dominant_theme`
+- `top_gainers` (JSON), `top_losers` (JSON), `most_active` (JSON)
+- `ticker_count`, `notes`
+
+### analysisresult
+- `id`, `scan_id` (FK), `symbol`, `created_at`
+- `current_price`, `operating_cash_flow`, `is_solvent`
+- `volatility_20d`, `volatility_category`
+- `analyst_rating`, `analyst_target_mean`, `upside_potential_pct`
+- `risk_level`, `direction_bias`, `is_safe_play`
+
+### tradeplan
+- `id`, `analysis_id` (FK), `symbol`, `strategy_type`, `risk_tier`
+- `status` (PLANNED/OPEN/CLOSED)
+- `strike_price`, `strike_price_2`, `expiration_date`, `contracts`
+- `delta`, `gamma`, `theta`, `vega`, `implied_volatility`
+- `max_profit`, `max_loss`, `breakeven_price`, `win_probability`
+- `profit_target_pct`, `stop_loss_pct`, `time_stop_days`
+- `realized_pnl`, `exit_reason`
 
 ---
 
 ## Quick Reference Prompts
 
 ### Market Scan
-"What are the top 25 biggest movers over the past week in the [SECTOR] sector? Categorize them as gainers, decliners, and notable movers. Include percentage changes and brief reason for movement."
+"Run a market scan to find top movers. Use the /api/scan endpoint."
 
 ### Stock Deep Dive
-"Analyze [TICKER] for potential investment. Include: current price, analyst ratings, recent news sentiment, volatility assessment, key upcoming catalysts, and whether this is a safe long-term hold or speculative play."
+"Analyze [TICKER] using /api/analyze. Check solvency, volatility, and risk level."
 
 ### Options Strategy
-"Generate three options strategies for [TICKER] with $[AMOUNT] capital:
-1. HIGH RISK - directional bet (weekly calls/puts)
-2. MEDIUM RISK - spread strategy (bull call spread, bear put spread)
-3. LOW RISK - income strategy (cash-secured put, put credit spread)
+"Generate options strategies for [TICKER] with $[AMOUNT] capital using /api/strategy."
 
-For each, provide: entry details, max profit, max loss, breakeven, exit conditions, and estimated win probability."
+### Full Workflow
+"Execute the full research workflow:
+1. POST /api/scan - Find top movers
+2. POST /api/analyze - Deep dive top 3 candidates
+3. POST /api/strategy - Generate options for safe plays
+4. GET /api/plans - Review and approve strategies"
