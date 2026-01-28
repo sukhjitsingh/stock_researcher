@@ -8,7 +8,8 @@ MCP Server available at /mcp for Claude autonomous execution.
 """
 
 import contextlib
-from fastapi import FastAPI, HTTPException, Depends
+import os
+from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional, List
 from sqlmodel import Session
@@ -42,7 +43,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Stock Research Agent API",
     description="AI-assisted stock research and options strategy generation",
-    version="3.1.0",
+    version="4.0.0",
     lifespan=lifespan
 )
 
@@ -65,7 +66,7 @@ app.mount("/mcp", mcp.streamable_http_app())
 @app.get("/api/health")
 def health_check():
     """Health check endpoint."""
-    return {"status": "online", "version": "3.1.0", "env": "vercel", "mcp": "/mcp"}
+    return {"status": "online", "version": "4.0.0", "env": "vercel", "mcp": "/mcp", "cron": "/api/cron/weekly-scan"}
 
 
 # === Market Scanning ===
@@ -188,3 +189,70 @@ def get_volatility(symbol: str, days: int = 20):
         return yfinance_service.calculate_volatility(symbol, days)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# === Cron Jobs (Vercel Scheduled Tasks) ===
+
+def verify_cron_secret(request: Request) -> bool:
+    """Verify the request is from Vercel Cron using CRON_SECRET."""
+    cron_secret = os.environ.get("CRON_SECRET")
+    if not cron_secret:
+        # If no secret configured, allow in development
+        return True
+    auth_header = request.headers.get("Authorization")
+    if auth_header and auth_header == f"Bearer {cron_secret}":
+        return True
+    return False
+
+
+@app.get("/api/cron/weekly-scan")
+def cron_weekly_scan(request: Request):
+    """
+    Automated weekly market scan triggered by Vercel Cron.
+
+    Schedule: Every Monday at 14:00 UTC (9 AM EST, market open)
+    Security: Vercel sends Authorization header with CRON_SECRET
+
+    This endpoint:
+    1. Runs market scan using Alpha Vantage TOP_GAINERS_LOSERS
+    2. Persists results to database
+    3. Returns scan summary for logging
+    """
+    # Verify request is from Vercel Cron
+    if not verify_cron_secret(request):
+        raise HTTPException(status_code=401, detail="Unauthorized: Invalid CRON_SECRET")
+
+    try:
+        # Run the weekly market scan with default parameters
+        scan_request = MarketScanRequest(min_change_pct=5.0, max_results=20)
+        result = market_scanner.run_scan(scan_request)
+
+        return {
+            "status": "success",
+            "message": "Weekly scan completed",
+            "scan_id": result.scan_id,
+            "scan_date": result.scan_date,
+            "ticker_count": result.ticker_count,
+            "dominant_theme": result.dominant_theme,
+            "top_gainers_count": len(result.top_gainers),
+            "top_losers_count": len(result.top_losers)
+        }
+    except Exception as e:
+        # Log error but return 200 to prevent Vercel from retrying
+        return {
+            "status": "error",
+            "message": f"Weekly scan failed: {str(e)}",
+            "scan_id": None
+        }
+
+
+@app.get("/api/cron/health")
+def cron_health():
+    """Health check for cron system."""
+    return {
+        "status": "online",
+        "cron_enabled": True,
+        "schedules": {
+            "weekly_scan": "0 14 * * 1 (Monday 14:00 UTC)"
+        }
+    }

@@ -10,9 +10,9 @@ We are building a Serverless Algorithmic Trading Agent that automates the resear
 |---:|---|---:|---|
 | 1 | Infrastructure Skeleton | ✅ Done | Vercel Project created, Postgres DB provisioned, API Keys linked. |
 | 2 | Functionality (The "Limbs") | ✅ Done | Service layer built with market scanner, analyzer, options engine. REST API deployed. |
-| 3 | Intelligence (The "Brain") | ✅ Done | MCP Tools built for Claude autonomous execution via local stdio server. |
-| 4 | Automation (The "Habit") | 🟡 Current | Set up Cron Jobs (via Vercel Cron) to run the "Weekly Scan" automatically. |
-| 5 | Interface (The "Face") | ⚪ Future | Build a Next.js Frontend to view the dashboard and approve trades visually. |
+| 3 | Intelligence (The "Brain") | ✅ Done | MCP Tools built for Claude autonomous execution via remote HTTP server. |
+| 4 | Automation (The "Habit") | ✅ Done | Vercel Cron Jobs configured for automated weekly market scans. |
+| 5 | Interface (The "Face") | 🟡 Current | Build a Next.js Frontend to view the dashboard and approve trades visually. |
 
 ---
 
@@ -24,7 +24,7 @@ We are building a Serverless Algorithmic Trading Agent that automates the resear
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/health` | Health check (version 2.0.0) |
+| GET | `/api/health` | Health check (version 4.0.0) |
 | GET | `/api/quote/{symbol}` | Get stock quote via yfinance |
 | GET | `/api/volatility/{symbol}` | Calculate 20-day annualized volatility |
 | POST | `/api/scan` | Trigger market scan (Alpha Vantage TOP_GAINERS_LOSERS) |
@@ -112,6 +112,64 @@ Claude can now execute the full research workflow:
 3. `generate_strategies(symbol, capital)` — Create options plans
 4. `list_plans()` — Review generated strategies
 5. `update_plan_status(id, status)` — Track execution
+
+---
+
+# Phase 4 — Automation (Vercel Cron Jobs) ✅ Completed
+
+## Goal
+Automate the weekly market scan workflow so the system runs independently without manual triggers.
+
+## Cron Job Configuration
+
+**Schedule:** Every Monday at 14:00 UTC (9:00 AM EST, market open)
+
+**Cron Expression:** `0 14 * * 1`
+
+## Implemented Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/cron/weekly-scan` | Automated weekly market scan (called by Vercel Cron) |
+| GET | `/api/cron/health` | Cron system health check |
+
+## Security
+
+- Vercel sends `Authorization: Bearer {CRON_SECRET}` header with cron requests
+- Endpoint validates the secret before executing
+- Add `CRON_SECRET` environment variable in Vercel Dashboard for production security
+
+## Configuration (vercel.json)
+
+```json
+{
+  "crons": [
+    {
+      "path": "/api/cron/weekly-scan",
+      "schedule": "0 14 * * 1"
+    }
+  ]
+}
+```
+
+## How It Works
+
+1. **Every Monday at 14:00 UTC**, Vercel triggers `/api/cron/weekly-scan`
+2. Endpoint verifies the `CRON_SECRET` authorization header
+3. Runs `market_scanner.run_scan()` with default parameters (5% threshold, 20 max results)
+4. Results are persisted to the `marketscan` database table
+5. Returns summary with scan_id, ticker counts, and dominant theme
+
+## Monitoring
+
+Check cron execution in:
+- **Vercel Dashboard** → Project → Cron Jobs tab
+- **API Response:** `/api/cron/health` shows active schedules
+- **Database:** Query `marketscan` table for weekly results
+
+## Files
+- `api/index.py` — Cron endpoints with authentication
+- `vercel.json` — Cron schedule configuration
 
 ---
 
