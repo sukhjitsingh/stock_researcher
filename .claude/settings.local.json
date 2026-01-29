@@ -4,7 +4,9 @@
       "WebFetch(domain:skills.sh)",
       "Bash(vercel env add:*)",
       "mcp__context7__resolve-library-id",
-      "mcp__context7__query-docs"
+      "mcp__context7__query-docs",
+      "Bash(vercel curl /api/quote/AAPL --deployment https://stockresearcher-2tf6e1q7r-sukhjit-singhs-projects.vercel.app)",
+      "Bash(wc:*)"
     ]
   }
 }
