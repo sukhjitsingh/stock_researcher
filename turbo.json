@@ -1,26 +1,38 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "globalDependencies": ["**/.env.*local"],
-  "tasks": {
-    "build": {
-      "dependsOn": ["^build"],
-      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
-    },
-    "dev": {
-      "cache": false,
-      "persistent": true
-    },
-    "lint": {},
-    "type-check": {},
-    "clean": {
-      "cache": false
-    }
-  },
   "globalEnv": [
     "DATABASE_URL",
     "POSTGRES_URL",
     "ALPHAVANTAGE_API_KEY",
     "CRON_SECRET",
     "NEXT_PUBLIC_API_URL"
-  ]
+  ],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"],
+      "env": ["DATABASE_URL", "ALPHAVANTAGE_API_KEY", "NEXT_PUBLIC_API_URL"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "lint": {},
+    "type-check": {
+      "dependsOn": ["^build"]
+    },
+    "clean": {
+      "cache": false
+    },
+    "db:generate": {
+      "cache": false
+    },
+    "db:push": {
+      "cache": false
+    },
+    "db:studio": {
+      "cache": false
+    }
+  }
 }

@@ -73,7 +73,7 @@ export async function getTopGainersLosers(): Promise<{
     throw new Error(`Alpha Vantage API error: ${response.status}`);
   }
 
-  const data: TopGainersLosersResponse = await response.json();
+  const data = await response.json() as TopGainersLosersResponse;
 
   // Check for API error messages
   if (data.Information || data.Note) {
@@ -108,7 +108,7 @@ export async function getCompanyOverview(symbol: string): Promise<Record<string,
     throw new Error(`Alpha Vantage API error: ${response.status}`);
   }
 
-  const data = await response.json();
+  const data = await response.json() as Record<string, unknown>;
 
   if (!data || !data.Symbol) {
     return { error: `No data found for ${symbol}` };
@@ -141,7 +141,7 @@ export async function getCashFlow(symbol: string): Promise<{
     throw new Error(`Alpha Vantage API error: ${response.status}`);
   }
 
-  const data: CashFlowResponse = await response.json();
+  const data = await response.json() as CashFlowResponse;
 
   if (data.Information || data.Note) {
     return {

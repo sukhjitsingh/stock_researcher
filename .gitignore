@@ -28,14 +28,6 @@ coverage/
 .DS_Store
 Thumbs.db
 
-# Python (legacy)
-__pycache__/
-*.py[cod]
-*$py.class
-.Python
-venv/
-.venv/
-*.egg-info/
 
 # Vercel
 .vercel/

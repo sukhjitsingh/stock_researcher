@@ -17,6 +17,7 @@
     "zod": "^3.23.0"
   },
   "devDependencies": {
+    "@stock-researcher/typescript-config": "workspace:*",
     "typescript": "^5.7.0"
   }
 }

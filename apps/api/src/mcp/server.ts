@@ -10,7 +10,7 @@ import { marketScanner } from '../services/market-scanner.js';
 import { analyzer } from '../services/analyzer.js';
 import { optionsEngine } from '../services/options-engine.js';
 import { yahooFinance } from '../services/yahoo-finance.js';
-import { db, schema } from '../db/client.js';
+import { db, schema } from '@stock-researcher/db';
 import { eq } from 'drizzle-orm';
 
 // MCP Protocol types

@@ -1,6 +1,2 @@
-/**
- * Database exports
- */
-
-export * from './client.js';
-export * from './schema.js';
+export { db, getDb, schema } from "@stock-researcher/db";
+export type { Database } from "@stock-researcher/db";

@@ -7,7 +7,7 @@
 
 import { Hono } from 'hono';
 import { optionsEngine } from '../services/options-engine.js';
-import { db, schema } from '../db/client.js';
+import { db, schema } from '@stock-researcher/db';
 import { eq } from 'drizzle-orm';
 
 export const plansRoutes = new Hono();

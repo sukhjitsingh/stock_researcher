@@ -5,7 +5,7 @@
  */
 
 import { eq, desc, and } from 'drizzle-orm';
-import { db, schema } from '../db/client.js';
+import { db, schema } from '@stock-researcher/db';
 import { yahooFinance } from './yahoo-finance.js';
 import { calculateGreeks, estimateWinProbability } from '@stock-researcher/shared';
 import type {

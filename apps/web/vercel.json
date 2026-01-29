@@ -1,0 +1,5 @@
+{
+  "framework": "nextjs",
+  "installCommand": "cd ../.. && bun install",
+  "buildCommand": "cd ../.. && bun run turbo build --filter=@stock-researcher/web"
+}

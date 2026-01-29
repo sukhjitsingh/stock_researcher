@@ -5,7 +5,7 @@
  */
 
 import { eq, desc } from 'drizzle-orm';
-import { db, schema } from '../db/client.js';
+import { db, schema } from '@stock-researcher/db';
 import { alphaVantage } from './alpha-vantage.js';
 import type { TickerMovement, MarketScanResponse, ScanSummary } from '@stock-researcher/shared';
 

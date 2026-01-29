@@ -4,7 +4,7 @@
  * Checks solvency, calculates volatility, assesses risk level.
  */
 
-import { db, schema } from '../db/client.js';
+import { db, schema } from '@stock-researcher/db';
 import { yahooFinance } from './yahoo-finance.js';
 import { alphaVantage } from './alpha-vantage.js';
 import type {
