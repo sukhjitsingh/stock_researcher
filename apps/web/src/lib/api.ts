@@ -1,4 +1,6 @@
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+// Determine appropriate API base URL
+const isProduction = process.env.NODE_ENV === 'production';
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || (isProduction ? "https://stockresearcher.vercel.app" : "http://localhost:3000");
 
 export class ApiClient {
   private static async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
