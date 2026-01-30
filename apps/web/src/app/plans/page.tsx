@@ -2,9 +2,11 @@
 
 import { PlanRow } from '@/components/plans/plan-row';
 import { Button } from '@/components/ui/button';
+
+import { ApiClient } from '@/lib/api';
 import type { TradePlanSummary } from '@stock-researcher/shared';
 import { Plus } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 // Manual Tab Button helper since ui/tabs typically has specific setup
 function FilterTab({ active, onClick, label, count }: any) {
@@ -12,8 +14,8 @@ function FilterTab({ active, onClick, label, count }: any) {
     <button
       onClick={onClick}
       className={`px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 ${active
-          ? 'bg-primary text-primary-foreground shadow-lg'
-          : 'bg-white/5 text-muted-foreground hover:bg-white/10 hover:text-white'
+        ? 'bg-primary text-primary-foreground shadow-lg'
+        : 'bg-white/5 text-muted-foreground hover:bg-white/10 hover:text-white'
         }`}
     >
       {label}
@@ -29,53 +31,41 @@ function FilterTab({ active, onClick, label, count }: any) {
 export default function PlansPage() {
   const [filter, setFilter] = useState<'ALL' | 'PLANNED' | 'OPEN' | 'CLOSED'>('ALL');
 
-  // Mock Data
-  const [plans, setPlans] = useState<TradePlanSummary[]>([
-    {
-      id: 1,
-      symbol: 'NVDA',
-      strategy_type: 'LONG_CALL',
-      risk_tier: 'HIGH',
-      status: 'OPEN',
-      strike: 850,
-      expiration: new Date('2024-04-19'),
-      max_profit: 2500,
-      max_loss: 450,
-      win_probability: 0.55,
-      created_at: new Date()
-    },
-    {
-      id: 2,
-      symbol: 'AMD',
-      strategy_type: 'PUT_CREDIT_SPREAD',
-      risk_tier: 'LOW',
-      status: 'PLANNED',
-      strike: 160,
-      expiration: new Date('2024-05-17'),
-      max_profit: 120,
-      max_loss: 880,
-      win_probability: 0.85,
-      created_at: new Date()
-    },
-    {
-      id: 3,
-      symbol: 'PLTR',
-      strategy_type: 'BULL_CALL_SPREAD',
-      risk_tier: 'MEDIUM',
-      status: 'CLOSED',
-      strike: 22,
-      expiration: new Date('2024-03-15'),
-      max_profit: 300,
-      max_loss: 200,
-      win_probability: 0.60,
-      created_at: new Date()
-    }
-  ]);
+  const [plans, setPlans] = useState<TradePlanSummary[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleStatusChange = (id: number, newStatus: string) => {
-    setPlans(plans.map(p =>
-      p.id === id ? { ...p, status: newStatus } : p
-    ));
+  // Fetch plans on mount
+  useEffect(() => {
+    const fetchPlans = async () => {
+      try {
+        const data = await ApiClient.get<TradePlanSummary[]>('/api/plans');
+        setPlans(data);
+      } catch (error) {
+        console.error("Failed to fetch plans:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPlans();
+  }, []);
+
+  const handleStatusChange = async (id: number, newStatus: string) => {
+    // Optimistic update
+    const oldPlans = [...plans];
+    setPlans(plans.map(p => p.id === id ? { ...p, status: newStatus } : p));
+
+    try {
+
+
+      // Actually ApiClient.patch body is 2nd arg.
+      // We need to pass query params.
+      // ApiClient.patch(`/api/plans/${id}/status?new_status=${newStatus}`, {})
+      await ApiClient.patch(`/api/plans/${id}/status?new_status=${newStatus}`, {});
+    } catch (error) {
+      console.error("Failed to update status:", error);
+      // Revert
+      setPlans(oldPlans);
+    }
   };
 
   const filteredPlans = filter === 'ALL'

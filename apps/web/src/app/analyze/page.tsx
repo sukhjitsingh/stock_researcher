@@ -3,6 +3,7 @@
 import { MetricCard } from '@/components/analyze/metric-card';
 import { RiskGauge } from '@/components/analyze/risk-gauge';
 import { SearchBar } from '@/components/analyze/search-bar';
+import { ApiClient } from '@/lib/api';
 import type { AnalysisResponse } from '@stock-researcher/shared';
 import { Activity, AlertTriangle, DollarSign, ShieldCheck, TrendingUp } from 'lucide-react';
 import { useState } from 'react';
@@ -19,41 +20,10 @@ export default function AnalyzePage() {
     setData(null);
 
     try {
-      // TODO: Replace with real API call: ApiClient.post('/api/analyze', { symbol: ticker })
-
-      // Mock API Delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      // Mock Data Response
-      const mockData: AnalysisResponse = {
-        analysis_id: 123,
-        symbol: ticker,
-        current_price: 154.32,
-        solvency: {
-          operating_cash_flow: 500000000,
-          free_cash_flow: 320000000,
-          is_solvent: true,
-          notes: "Strong cash generation from operations."
-        },
-        volatility: {
-          volatility_20d: 0.24,
-          volatility_annualized: 0.38,
-          category: 'MEDIUM',
-          recommended_strategies: ["Bull Call Spread", "Iron Condor"]
-        },
-        risk_level: 'MEDIUM',
-        direction_bias: 'BULLISH',
-        is_safe_play: true,
-        analyst_rating: "BUY",
-        analyst_target_mean: 180.00,
-        upside_potential_pct: 16.6,
-        recommendation_summary: "Strong buy candidate due to robust earnings growth and favorable technical setup. Volatility is moderate, allowing for directional option spreads."
-      };
-
-      setData(mockData);
-
+      const result = await ApiClient.post<AnalysisResponse>('/api/analyze', { symbol: ticker });
+      setData(result);
     } catch (err) {
-      setError("Failed to analyze ticker. Please try again.");
+      setError(err instanceof Error ? err.message : "Failed to analyze ticker. Please try again.");
     } finally {
       setLoading(false);
     }

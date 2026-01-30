@@ -2,6 +2,7 @@
 
 import { StrategyCard } from '@/components/strategy/strategy-card';
 import { Button } from '@/components/ui/button';
+import { ApiClient } from '@/lib/api';
 import type { StrategyPlan, StrategyResponse } from '@stock-researcher/shared';
 import { DollarSign, Search, Sparkles } from 'lucide-react';
 import { useState } from 'react';
@@ -30,76 +31,13 @@ export default function StrategyPage() {
     setData(null);
 
     try {
-      // Mock API Call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      const mockStrategies: StrategyPlan[] = [
-        {
-          strategy_type: 'LONG_CALL',
-          risk_tier: 'HIGH',
-          win_probability: 0.42,
-          max_profit: Infinity,
-          max_loss: 150,
-          breakeven: 185.50,
-          risk_reward_ratio: 3.5,
-          profit_target_pct: 100,
-          stop_loss_pct: 50,
-          time_stop_days: 5,
-          rationale: "Aggressive directional play targeting earnings breakout.",
-          warnings: ["Theta decay is high", "Binary event risk"],
-          legs: [
-            { action: 'BUY', option_type: 'CALL', strike: 185, expiration: new Date('2024-05-17'), premium: 1.50, contracts: 1 }
-          ]
-        },
-        {
-          strategy_type: 'BULL_CALL_SPREAD',
-          risk_tier: 'MEDIUM',
-          win_probability: 0.65,
-          max_profit: 300,
-          max_loss: 200,
-          breakeven: 182.00,
-          risk_reward_ratio: 1.5,
-          profit_target_pct: 50,
-          stop_loss_pct: 40,
-          time_stop_days: 15,
-          rationale: "Balanced vertical spread to reduce cost basis.",
-          warnings: [],
-          legs: [
-            { action: 'BUY', option_type: 'CALL', strike: 180, expiration: new Date('2024-06-21'), premium: 5.00, contracts: 1 },
-            { action: 'SELL', option_type: 'CALL', strike: 185, expiration: new Date('2024-06-21'), premium: 3.00, contracts: 1 }
-          ]
-        },
-        {
-          strategy_type: 'PUT_CREDIT_SPREAD',
-          risk_tier: 'LOW',
-          win_probability: 0.82,
-          max_profit: 85,
-          max_loss: 415,
-          breakeven: 174.15,
-          risk_reward_ratio: 0.2,
-          profit_target_pct: 90,
-          stop_loss_pct: 200,
-          time_stop_days: 20,
-          rationale: "High probability income strategy below support levels.",
-          warnings: [],
-          legs: [
-            { action: 'SELL', option_type: 'PUT', strike: 175, expiration: new Date('2024-06-21'), premium: 2.10, contracts: 1 },
-            { action: 'BUY', option_type: 'PUT', strike: 170, expiration: new Date('2024-06-21'), premium: 1.25, contracts: 1 }
-          ]
-        }
-      ];
-
-      setData({
-        symbol: ticker.toUpperCase(),
-        current_price: 178.40,
+      const result = await ApiClient.post<StrategyResponse>('/api/strategy', {
+        symbol: ticker,
         capital: parseFloat(capital),
-        strategies: mockStrategies,
-        recommendation: "Given the Medium Volatility, the Bull Call Spread offers the best risk-adjusted return.",
-        capital_warnings: []
       });
-
+      setData(result);
     } catch (error) {
-      console.error("Failed to generate strategies");
+      console.error("Failed to generate strategies", error);
     } finally {
       setLoading(false);
     }
