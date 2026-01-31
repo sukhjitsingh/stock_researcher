@@ -67,7 +67,7 @@ This document outlines the design architecture and functionality of the Stock Re
 - **Aligned List View**: Strictly aligned 12-column grid layout for consistent data presentation.
     - **Info**: Symbol, Strategy Type, Expiration.
     - **Metrics**: Max Profit, Win Probability.
-    - **Status**: Visual badge indicating current state.
+    - **Status**: Visual badge indicating current state (Isolated in pure grid column).
     - **Actions**: Context-aware buttons to transitions trades (e.g., "Open Trade", "Close").
 
 ---

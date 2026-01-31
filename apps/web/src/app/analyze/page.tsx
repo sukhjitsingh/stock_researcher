@@ -6,10 +6,12 @@ import { SearchBar } from '@/components/analyze/search-bar';
 import { ApiClient } from '@/lib/api';
 import type { AnalysisResponse } from '@stock-researcher/shared';
 import { Activity, AlertTriangle, DollarSign, ShieldCheck, TrendingUp } from 'lucide-react';
-import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
 // Import Button for future use or navigation
 
-export default function AnalyzePage() {
+function AnalyzeContent() {
+  const searchParams = useSearchParams();
   const [data, setData] = useState<AnalysisResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,6 +30,13 @@ export default function AnalyzePage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const symbol = searchParams.get('symbol');
+    if (symbol) {
+      handleSearch(symbol);
+    }
+  }, [searchParams]);
 
   return (
     <div className="max-w-6xl mx-auto space-y-12 py-8">
@@ -157,5 +166,13 @@ export default function AnalyzePage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function AnalyzePage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-white/50">Loading...</div>}>
+      <AnalyzeContent />
+    </Suspense>
   );
 }
